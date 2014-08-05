@@ -10,16 +10,19 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 )
+
 /**
 *The proxy server port
-*/
+ */
 var port string
+
 /**
 *The real proxy addresses
-*/
+ */
 var addrs string
 
 func proxyHandler(respw http.ResponseWriter, req *http.Request) {
@@ -48,13 +51,13 @@ func proxyHandler(respw http.ResponseWriter, req *http.Request) {
 		loghit(req, addr, http.StatusGatewayTimeout)
 		return
 	}
-	
+
 	for k, v := range resp.Header {
 		for _, vv := range v {
 			respw.Header().Add(k, vv)
 		}
 	}
-	respw.Header().Add("X-Forwarded-For","GoProxyServer")
+	respw.Header().Add("X-Forwarded-For", "GoProxyServer")
 	respw.WriteHeader(resp.StatusCode)
 	io.Copy(respw, resp.Body)
 	loghit(req, addr, resp.StatusCode)
@@ -79,16 +82,17 @@ func loadConfig() {
 	}
 	if value, ok := configMap["port"]; ok {
 		port = value
-		fmt.Println("The server port:"+value)
+		fmt.Println("The server port:" + value)
 	}
 	if value, ok := configMap["addrs"]; ok {
 		addrs = value
-		fmt.Println("The real addrs:"+value)
+		fmt.Println("The real addrs:" + value)
 	}
 
 }
 func startGoProxyServer() {
-	log.Println("Start GoProxyServer on port "+port)
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	log.Println("Start GoProxyServer on port " + port)
 	http.HandleFunc("/", proxyHandler)
 	err := http.ListenAndServe("[::]:"+port, nil)
 	if err != nil {
