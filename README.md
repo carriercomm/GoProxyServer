@@ -1,3 +1,3 @@
 GoProxyServer
 =============
-一个支持负载均衡的简单反向代理服务器
+A simple load balancing reverse proxy server
